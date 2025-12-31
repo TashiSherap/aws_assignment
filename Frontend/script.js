@@ -1,11 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. DYNAMIC API URL LOGIC
-    // Replace 'https://your-backend-service.onrender.com' with your actual Render URL
-    const LIVE_BACKEND_URL = 'https://your-backend-service.onrender.com'; 
+    // --- ONLY CHANGE THIS SECTION ---
+    const LIVE_BACKEND_URL = 'https://backend-3fgd.onrender.com'; // <--- PASTE YOUR RENDER BACKEND LINK HERE
     
     const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:3000/api/expenses'
+        ? 'http://localhost:3000/api/expenses' 
         : `${LIVE_BACKEND_URL}/api/expenses`;
+    // --------------------------------
 
     const API_KEY = 'demo-key';
 
@@ -17,17 +17,11 @@ document.addEventListener("DOMContentLoaded", () => {
     let expenses = [];
     let editingId = null;
 
-    // 2. FETCH ALL EXPENSES
     async function fetchExpenses() {
-        try {
-            const res = await fetch(API_URL, { headers: { 'x-api-key': API_KEY } });
-            if (!res.ok) throw new Error('Network response was not ok');
-            expenses = await res.json();
-            displayExpenses(expenses);
-            updateTotalAmount();
-        } catch (error) {
-            console.error('Fetch error:', error);
-        }
+        const res = await fetch(API_URL, { headers: { 'x-api-key': API_KEY } });
+        expenses = await res.json();
+        displayExpenses(expenses);
+        updateTotalAmount();
     }
 
     function displayExpenses(expensesToShow) {
@@ -53,7 +47,6 @@ document.addEventListener("DOMContentLoaded", () => {
         totalAmount.textContent = total.toFixed(2);
     }
 
-    // 3. ADD OR UPDATE EXPENSE
     expenseForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -67,36 +60,24 @@ document.addEventListener("DOMContentLoaded", () => {
         const method = editingId ? 'PUT' : 'POST';
         const url = editingId ? `${API_URL}/${editingId}` : API_URL;
 
-        try {
-            await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
-                body: JSON.stringify(expense)
-            });
+        await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
+            body: JSON.stringify(expense)
+        });
 
-            expenseForm.reset();
-            editingId = null;
-            expenseForm.querySelector('button').textContent = 'Add Expense';
-            fetchExpenses();
-        } catch (error) {
-            console.error('Submit error:', error);
-        }
+        expenseForm.reset();
+        editingId = null;
+        expenseForm.querySelector('button').textContent = 'Add Expense';
+        fetchExpenses();
     });
 
-    // 4. DELETE OR EDIT HANDLERS
     expenseList.addEventListener("click", async (e) => {
         if (e.target.classList.contains("delete-btn")) {
             const id = e.target.dataset.id;
             if (confirm("Delete this expense?")) {
-                try {
-                    await fetch(`${API_URL}/${id}`, { 
-                        method: 'DELETE', 
-                        headers: { 'x-api-key': API_KEY } 
-                    });
-                    fetchExpenses();
-                } catch (error) {
-                    console.error('Delete error:', error);
-                }
+                await fetch(`${API_URL}/${id}`, { method: 'DELETE', headers: { 'x-api-key': API_KEY } });
+                fetchExpenses();
             }
         }
 
@@ -112,7 +93,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 5. FILTERING
     filterCategory.addEventListener("change", () => {
         const category = filterCategory.value;
         if (category === "All") {
@@ -121,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const filtered = expenses.filter(exp => exp.category === category);
             displayExpenses(filtered);
         }
-        updateTotalAmount();
+        updateTotalAmount(); 
     });
 
     fetchExpenses();

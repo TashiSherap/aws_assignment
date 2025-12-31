@@ -27,19 +27,21 @@ const dbConfig = {
 // This replaces the need to manually open/close connections in every route
 async function runQuery(sql, params = []) {
     if (isProduction) {
-        // --- RENDER (PostgreSQL) ---
         if (!pgPool) {
             pgPool = new Pool({
                 connectionString: process.env.DATABASE_URL,
                 ssl: { rejectUnauthorized: false }
             });
         }
-        // PostgreSQL uses $1, $2 instead of ?
-        const pgSql = sql.replace(/\?/g, (match, index) => `$${params.indexOf(params[index]) + 1}`);
+        // PostgreSQL uses $1, $2, etc. This correctly maps them in order.
+        let pgSql = sql;
+        params.forEach((_, i) => {
+            pgSql = pgSql.replace('?', `$${i + 1}`);
+        });
+        
         const res = await pgPool.query(pgSql, params);
         return [res.rows];
     } else {
-        // --- LOCAL (MySQL) ---
         const connection = await mysql.createConnection(dbConfig);
         const [rows] = await connection.execute(sql, params);
         await connection.end();
