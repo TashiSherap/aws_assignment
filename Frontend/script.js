@@ -1,5 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const API_URL = 'http://localhost:3000/api/expenses'; // Change for deployment
+    // 1. DYNAMIC API URL LOGIC
+    // Replace 'https://your-backend-service.onrender.com' with your actual Render URL
+    const LIVE_BACKEND_URL = 'https://your-backend-service.onrender.com'; 
+    
+    const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000/api/expenses'
+        : `${LIVE_BACKEND_URL}/api/expenses`;
+
     const API_KEY = 'demo-key';
 
     const expenseForm = document.getElementById("expense-form");
@@ -10,11 +17,17 @@ document.addEventListener("DOMContentLoaded", () => {
     let expenses = [];
     let editingId = null;
 
+    // 2. FETCH ALL EXPENSES
     async function fetchExpenses() {
-        const res = await fetch(API_URL, { headers: { 'x-api-key': API_KEY } });
-        expenses = await res.json();
-        displayExpenses(expenses);
-        updateTotalAmount();
+        try {
+            const res = await fetch(API_URL, { headers: { 'x-api-key': API_KEY } });
+            if (!res.ok) throw new Error('Network response was not ok');
+            expenses = await res.json();
+            displayExpenses(expenses);
+            updateTotalAmount();
+        } catch (error) {
+            console.error('Fetch error:', error);
+        }
     }
 
     function displayExpenses(expensesToShow) {
@@ -40,6 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
         totalAmount.textContent = total.toFixed(2);
     }
 
+    // 3. ADD OR UPDATE EXPENSE
     expenseForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
@@ -53,24 +67,36 @@ document.addEventListener("DOMContentLoaded", () => {
         const method = editingId ? 'PUT' : 'POST';
         const url = editingId ? `${API_URL}/${editingId}` : API_URL;
 
-        await fetch(url, {
-            method,
-            headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
-            body: JSON.stringify(expense)
-        });
+        try {
+            await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
+                body: JSON.stringify(expense)
+            });
 
-        expenseForm.reset();
-        editingId = null;
-        expenseForm.querySelector('button').textContent = 'Add Expense';
-        fetchExpenses();
+            expenseForm.reset();
+            editingId = null;
+            expenseForm.querySelector('button').textContent = 'Add Expense';
+            fetchExpenses();
+        } catch (error) {
+            console.error('Submit error:', error);
+        }
     });
 
+    // 4. DELETE OR EDIT HANDLERS
     expenseList.addEventListener("click", async (e) => {
         if (e.target.classList.contains("delete-btn")) {
             const id = e.target.dataset.id;
             if (confirm("Delete this expense?")) {
-                await fetch(`${API_URL}/${id}`, { method: 'DELETE', headers: { 'x-api-key': API_KEY } });
-                fetchExpenses();
+                try {
+                    await fetch(`${API_URL}/${id}`, { 
+                        method: 'DELETE', 
+                        headers: { 'x-api-key': API_KEY } 
+                    });
+                    fetchExpenses();
+                } catch (error) {
+                    console.error('Delete error:', error);
+                }
             }
         }
 
@@ -86,6 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // 5. FILTERING
     filterCategory.addEventListener("change", () => {
         const category = filterCategory.value;
         if (category === "All") {
@@ -94,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const filtered = expenses.filter(exp => exp.category === category);
             displayExpenses(filtered);
         }
-        updateTotalAmount(); // Total remains full amount
+        updateTotalAmount();
     });
 
     fetchExpenses();
