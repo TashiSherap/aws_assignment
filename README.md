@@ -32,7 +32,9 @@ A clean, persistent **Expense Tracker** demonstrating a full **3-tier architectu
      date DATE NOT NULL
    );
 
-BackendBashcd backend
+Backend
+Bash
+cd backend
 npm install
 node server.js
 
@@ -40,4 +42,5 @@ Frontend
 Open frontend/index.html with Live Server (VS Code) or run:Bashcd frontend
 npx http-server
 
-Visit: [http://localhost:8080](https://frontend-qjbc.onrender.com/)
+Visit: 
+[http://localhost:8080](https://frontend-qjbc.onrender.com/)
